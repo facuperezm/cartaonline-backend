@@ -1,7 +1,11 @@
 import { Request, Response } from 'express'
 import asyncHandler from 'express-async-handler'
-import User from '../models/userModel'
+import User, { UserDocument } from '../models/userModel'
 import generateToken from '../utils/generateToken'
+
+interface AuthenticatedRequest extends Request {
+	user?: UserDocument
+}
 
 // @desc    Auth user & get token
 // @route   POST /api/users/auth
@@ -72,15 +76,52 @@ const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 // @desc    Get user profile
 // @route   GET /api/users/profile
 // @access  Private
-const getUserProfile = asyncHandler(async (req: Request, res: Response) => {
-	res.status(200).json({ message: 'Get user profile' })
-})
+const getUserProfile = asyncHandler(
+	async (req: AuthenticatedRequest, res: Response) => {
+		const user = req.user
+
+		if (user) {
+			const userProfile = {
+				_id: user._id,
+				name: user.name,
+				email: user.email
+			}
+
+			res.status(200).json(userProfile)
+		} else {
+			res.status(404)
+			throw new Error('User not found')
+		}
+	}
+)
 
 // @desc    Update user profile
 // @route   PUT /api/users/profile
 // @access  Private
-const updateUserProfile = asyncHandler(async (req: Request, res: Response) => {
-	res.status(200).json({ message: 'Update user profile' })
-})
+const updateUserProfile = asyncHandler(
+	async (req: AuthenticatedRequest, res: Response) => {
+		const user = await User.findById(req.user?._id)
+
+		if (user) {
+			user.name = req.body.name || user.name
+			user.email = req.body.email || user.email
+
+			if (req.body.password) {
+				user.password = req.body.password
+			}
+
+			const updatedUser = await user.save()
+
+			res.status(200).json({
+				_id: updatedUser._id,
+				name: updatedUser.name,
+				email: updatedUser.email
+			})
+		} else {
+			res.status(404)
+			throw new Error('User not found')
+		}
+	}
+)
 
 export { authUser, registerUser, logoutUser, getUserProfile, updateUserProfile }

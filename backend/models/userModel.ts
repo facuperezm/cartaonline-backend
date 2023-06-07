@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import bycrypt from 'bcryptjs'
 
 export interface UserDocument extends Document {
+	_id: string
 	email: string
 	password: string
 	name: string
