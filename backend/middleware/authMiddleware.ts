@@ -9,10 +9,9 @@ interface AuthenticatedRequest extends Request {
 
 const protect = asyncHandler(
 	async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-		let token
-
-		token = req.cookies.jwt // Assuming you have the necessary middleware to parse cookies
-
+		// Here we are checking if the token is present in the request header
+		let token = req.cookies.jwt
+		// Decode the token and get the user id from it and then find the user in the database and attach it to the request object
 		if (token) {
 			try {
 				const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
