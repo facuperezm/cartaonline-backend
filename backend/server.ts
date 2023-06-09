@@ -1,6 +1,8 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import userRoutes from './routes/userRoutes'
+import companyRoutes from './routes/companyRoutes'
+import menuRoutes from './routes/menuRoutes'
 import { errorHandler, notFound } from './middleware/errorMiddleware'
 import connectDB from './config/db'
 import cookieParser from 'cookie-parser'
@@ -15,6 +17,8 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
+app.use('/api/company', companyRoutes)
+app.use('/api/menu', menuRoutes)
 app.use('/api/users', userRoutes)
 
 app.get('/', (req, res) => {

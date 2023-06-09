@@ -6,6 +6,7 @@ export interface UserDocument extends Document {
 	email: string
 	password: string
 	name: string
+	company: object
 	isAdmin: boolean
 	matchPassword: (enteredPassword: string) => Promise<boolean>
 	isModified: (password: string) => boolean
@@ -25,6 +26,10 @@ const userSchema = new mongoose.Schema<UserDocument>(
 		password: {
 			type: String,
 			required: true
+		},
+		company: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'CompanyModel'
 		},
 		isAdmin: {
 			type: Boolean, // only admins can create products
