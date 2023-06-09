@@ -4,40 +4,62 @@ import companyModel from '../models/companyModel'
 import jwt from 'jsonwebtoken'
 
 // @desc    Save a new company
-// @route   POST /api/company
+// @route   POST /api/dashboard
 // @access  Public
-export const saveCompany = asyncHandler(async (req: Request, res: Response) => {
-	try {
-		const { name, products, email, password } = req.body
+export const saveCompany = asyncHandler(
+	async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const {
+				companyName,
+				name,
+				lastName,
+				email,
+				password,
+				category,
+				phoneNumber,
+				location
+			} = req.body
 
-		const newCompany = new companyModel({
-			name,
-			products,
-			email,
-			password
-		})
+			const newCompany = new companyModel({
+				companyName,
+				name,
+				lastName,
+				email,
+				password,
+				category,
+				phoneNumber,
+				location
+			})
 
-		await newCompany.save()
+			const companyExist = await companyModel.findOne({ email }) // Check if the company already exists
 
-		res.status(201).json({ message: 'Company saved successfully' })
-	} catch (error) {
-		console.error(error)
-		res.status(500).json({ message: 'Error saving the company' })
+			if (companyExist) {
+				res.status(400)
+				throw new Error('Company already exists')
+			}
+
+			await newCompany.save()
+
+			res.status(201).json({ message: 'Company saved successfully' })
+		} catch (error) {
+			console.error(error)
+			next(error)
+		}
 	}
-})
+)
 
 // @desc    Get all companies
 // @route   GET /api/companies
-// @access  Public
+// @access  Private or Public
 export const getCompanies = asyncHandler(
-	async (req: Request, res: Response) => {
+	async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const companies = await companyModel.find()
 
 			res.json(companies)
 		} catch (error) {
 			console.error(error)
-			res.status(500).json({ message: 'Error getting the companies' })
+			next(error)
 		}
 	}
 )
@@ -48,10 +70,10 @@ export const getCompanies = asyncHandler(
 export const login = asyncHandler(
 	async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		try {
-			const { username, password } = req.body
+			const { email, password } = req.body
 
 			// Verify user credentials
-			const company = await companyModel.findOne({ username, password })
+			const company = await companyModel.findOne({ email, password })
 
 			if (!company) {
 				res.status(401).json({ message: 'Invalid credentials' })
@@ -70,7 +92,7 @@ export const login = asyncHandler(
 			res.json({ message: 'Login successful' })
 		} catch (error) {
 			console.error(error)
-			res.status(500).json({ message: 'Error logging in' })
+			next(error)
 		}
 	}
 )

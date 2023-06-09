@@ -17,7 +17,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
-app.use('/api/company', companyRoutes)
+app.use('/api/dashboard', companyRoutes)
 app.use('/api/menu', menuRoutes)
 app.use('/api/users', userRoutes)
 

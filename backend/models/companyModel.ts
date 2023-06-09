@@ -1,5 +1,5 @@
-// companyModel.ts
-import mongoose, { Document } from 'mongoose'
+import mongoose, { Document, Schema } from 'mongoose'
+import { MenuDocument } from './menuModel'
 
 export interface Hours {
 	dayOfTheWeek: string
@@ -8,21 +8,46 @@ export interface Hours {
 }
 
 export interface CompanyDocument extends Document {
+	companyName: string
 	name: string
-	menu: object
-	daysOfOperation: string[]
-	workingHours: Hours[]
-	whatsappNumber: Number
+	lastName: string
+	email: string
+	password: string
+	phoneNumber: number
+	category:
+		| 'restaurant'
+		| 'bar'
+		| 'cafe'
+		| 'bakery'
+		| 'fast food'
+		| 'internacional'
+		| 'panaderia'
+		| 'cafeteria'
+		| 'barra'
+		| 'comida rapida'
+		| 'comida italiana'
+		| 'comida mexicana'
+		| 'comida internacional'
+		| 'pasteleria'
+		| 'cafeteria'
+		| 'cerveceria'
 	location: string
-	products: string[]
+	menu?: MenuDocument['_id']
+	daysOfOperation?: string[]
+	workingHours?: Hours[]
+	products?: string[]
 }
 
-const companySchema = new mongoose.Schema<CompanyDocument>({
+const companySchema = new Schema<CompanyDocument>({
+	companyName: { type: String, required: true, unique: true },
 	name: { type: String, required: true },
-	menu: { type: mongoose.Schema.Types.ObjectId, ref: 'Menu' },
+	lastName: { type: String, required: true },
+	email: { type: String, unique: true, required: true },
+	category: { type: String, required: true },
+	menu: { type: Schema.Types.ObjectId, ref: 'Menu' },
 	daysOfOperation: [{ type: String, required: true }],
-	workingHours: [{ type: String, required: true }],
-	whatsappNumber: { type: Number, unique: true },
+	workingHours: [{ type: Schema.Types.Mixed, required: true }],
+	phoneNumber: { type: Number, unique: true },
 	location: { type: String },
 	products: [{ type: String, required: true }]
 })
