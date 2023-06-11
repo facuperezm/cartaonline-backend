@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import companyModel from '../models/companyModel'
 import jwt from 'jsonwebtoken'
+import generateToken from '../utils/generateToken'
 
 // @desc    Save a new company
 // @route   POST /api/dashboard
@@ -20,7 +21,14 @@ export const saveCompany = asyncHandler(
 				location
 			} = req.body
 
-			const newCompany = new companyModel({
+			const companyExist = await companyModel.findOne({ email }) // Check if the company already exists
+
+			if (companyExist) {
+				res.status(400)
+				throw new Error('Company already exists')
+			}
+
+			const newCompany = await companyModel.create({
 				companyName,
 				name,
 				lastName,
@@ -31,15 +39,17 @@ export const saveCompany = asyncHandler(
 				location
 			})
 
-			const companyExist = await companyModel.findOne({ email }) // Check if the company already exists
-
-			if (companyExist) {
+			if (newCompany) {
+				generateToken(res, newCompany._id.toString())
+				res.status(201).json({
+					_id: newCompany._id,
+					companyName: newCompany.companyName,
+					name: newCompany.name
+				})
+			} else {
 				res.status(400)
-				throw new Error('Company already exists')
+				throw new Error('Invalid company data')
 			}
-
-			await newCompany.save()
-
 			res.status(201).json({ message: 'Company saved successfully' })
 		} catch (error) {
 			console.error(error)
@@ -67,7 +77,7 @@ export const getCompanies = asyncHandler(
 // @desc    Login a company
 // @route   POST /api/company/login
 // @access  Public
-export const login = asyncHandler(
+export const loginCompany = asyncHandler(
 	async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		try {
 			const { email, password } = req.body
@@ -94,5 +104,20 @@ export const login = asyncHandler(
 			console.error(error)
 			next(error)
 		}
+	}
+)
+
+// @desc    Logout company
+// @route   GET /api/dashboard/logout
+// @access  Private
+export const logoutCompany = asyncHandler(
+	async (req: Request, res: Response) => {
+		res.cookie('jwt', '', {
+			httpOnly: true,
+			expires: new Date(0),
+			secure: process.env.NODE_ENV === 'production'
+		})
+
+		res.status(200).json({ message: 'Company logged out!' })
 	}
 )
