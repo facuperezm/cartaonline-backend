@@ -4,7 +4,7 @@ import {
 	getCompanies,
 	logoutCompany,
 	loginCompany
-} from '../controllers/companyController'
+} from '../controllers/CompanyController'
 import { protect } from '../middleware/authMiddleware'
 
 const router = express.Router()

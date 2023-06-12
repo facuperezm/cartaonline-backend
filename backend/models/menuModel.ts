@@ -10,6 +10,7 @@ export interface MenuItem {
 
 export interface MenuDocument extends Document {
 	items: MenuItem[]
+	status: 'pending' | 'approved' // Agregar el campo "status" con los posibles valores 'pending' o 'approved'
 }
 
 const menuSchema = new mongoose.Schema<MenuDocument>({
@@ -21,7 +22,8 @@ const menuSchema = new mongoose.Schema<MenuDocument>({
 			image: { type: String },
 			category: { type: String, required: true }
 		}
-	]
+	],
+	status: { type: String, default: 'pending' } // Establecer "pending" como valor por defecto
 })
 
 export default mongoose.model<MenuDocument>('Menu', menuSchema)

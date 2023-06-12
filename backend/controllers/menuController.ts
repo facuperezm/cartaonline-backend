@@ -10,7 +10,8 @@ export const saveMenu = asyncHandler(async (req: Request, res: Response) => {
 
 	const newMenu = new Menu({
 		name,
-		items
+		items,
+		status: 'pending' // Agregar el campo "status" y establecerlo como "pending"
 	})
 
 	await newMenu.save()
