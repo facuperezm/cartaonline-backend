@@ -1,8 +1,18 @@
 import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
-import companyModel from '../models/companyModel'
+import companyModel, { CompanyDocument } from '../models/companyModel'
 import jwt from 'jsonwebtoken'
 import generateToken from '../utils/generateToken'
+
+interface AuthenticatedRequest extends Request {
+	company?: CompanyDocument
+}
+
+// Esto deberia tener los siguientes controladores
+// 1. Crear una empresa (registrarse)
+// 2. Login de una empresa (con email y password)
+// 3. Logout de una empresa (destruir la cookie, ruta privada)
+// 4. Obtener todas las empresas (ruta publica, para el home)
 
 // @desc    Save a new company
 // @route   POST /api/dashboard
@@ -51,8 +61,8 @@ export const saveCompany = asyncHandler(
 				throw new Error('Invalid company data')
 			}
 			res.status(201).json({ message: 'Company saved successfully' })
-		} catch (error) {
-			console.error(error)
+		} catch (error: any) {
+			res.status(500).json({ ok: false, message: error.message })
 			next(error)
 		}
 	}
@@ -66,8 +76,9 @@ export const getCompanies = asyncHandler(
 		try {
 			const companies = await companyModel.find()
 
-			res.json(companies)
-		} catch (error) {
+			res.status(200).json({ ok: true, data: companies })
+		} catch (error: any) {
+			res.status(500).json({ ok: false, message: error.message })
 			console.error(error)
 			next(error)
 		}
@@ -100,8 +111,8 @@ export const loginCompany = asyncHandler(
 			res.cookie('token', token, { httpOnly: true })
 
 			res.json({ message: 'Login successful' })
-		} catch (error) {
-			console.error(error)
+		} catch (error: any) {
+			res.status(500).json({ ok: false, message: error.message })
 			next(error)
 		}
 	}
@@ -119,5 +130,32 @@ export const logoutCompany = asyncHandler(
 		})
 
 		res.status(200).json({ message: 'Company logged out!' })
+	}
+)
+
+// @desc    Get company profile
+// @route   GET /api/dashboard/profile
+// @access  Private
+export const getCompanyProfile = asyncHandler(
+	async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+		const company = req.company
+
+		if (company) {
+			const companyProfile = {
+				_id: company._id,
+				companyName: company.companyName,
+				name: company.name,
+				lastName: company.lastName,
+				email: company.email,
+				category: company.category,
+				phoneNumber: company.phoneNumber,
+				location: company.location
+			}
+
+			res.status(200).json(companyProfile)
+		} else {
+			res.status(404)
+			throw new Error('Company not found')
+		}
 	}
 )
