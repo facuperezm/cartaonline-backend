@@ -14,7 +14,7 @@ interface AuthenticatedRequest extends Request {
 // 3. Logout de una empresa (destruir la cookie, ruta privada)
 // 4. Obtener todas las empresas (ruta publica, para el home)
 
-// @desc    Save a new company
+// @desc    Save a new company or REGISTER
 // @route   POST /api/dashboard
 // @access  Public
 export const saveCompany = asyncHandler(
@@ -156,6 +156,34 @@ export const getCompanyProfile = asyncHandler(
 		} else {
 			res.status(404)
 			throw new Error('Company not found')
+		}
+	}
+)
+
+// @desc  Get confirmation code/token
+// @route GET /api/dashboard/confirmation/:token
+// @access Private
+
+export const confirmCompany = asyncHandler(
+	async (req: Request, res: Response) => {
+		const { token } = req.params
+
+		try {
+			const user = await companyModel.findOne({ activationToken: token })
+
+			if (!user) {
+				return res.status(400).json({ message: 'Invalid token' })
+			}
+
+			// Activate user
+			user.active = true
+			user.activationToken = undefined
+
+			await user.save()
+
+			res.redirect('/dashboard')
+		} catch {
+			res.status(500).json({ ok: false, message: 'Something went wrong' })
 		}
 	}
 )

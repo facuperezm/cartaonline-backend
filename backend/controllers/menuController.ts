@@ -4,14 +4,14 @@ import Menu from '../models/menuModel'
 
 // @desc    Save a new menu
 // @route   POST /api/menu
-// @access  Public
+// @access  Private
 export const saveMenu = asyncHandler(async (req: Request, res: Response) => {
 	const { name, items } = req.body
 
 	const newMenu = new Menu({
 		name,
 		items,
-		status: 'pending' // Agregar el campo "status" y establecerlo como "pending"
+		status: 'pending'
 	})
 
 	await newMenu.save()
