@@ -1,16 +1,18 @@
 import mongoose from 'mongoose'
 
 const connectDB = async () => {
-	if (!process.env.MONGO_URI) {
-		throw new Error(
-			'Please define the MONGO_URI environment variable inside .env.local'
-		)
-	}
 	try {
-		const conn = await mongoose.connect(process.env.MONGO_URI || '')
-		console.log(`MongoDB Connected: ${conn.connection.host}`)
+		const mongoURI = process.env.MONGO_URI
+		if (!mongoURI) {
+			throw new Error(
+				'Please define the MONGO_URI environment variable inside .env.local'
+			)
+		}
+
+		const conn = await mongoose.connect(mongoURI)
+		console.log(`MongoDB Connected to this: ${conn.connection.host}`)
 	} catch (error: any) {
-		console.error(`Error: ${error.message}`)
+		console.error(`Error!!! ${error.message}`)
 		process.exit(1)
 	}
 }

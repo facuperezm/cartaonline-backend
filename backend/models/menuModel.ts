@@ -1,4 +1,4 @@
-import mongoose, { Document } from 'mongoose'
+import mongoose, { Document, Schema } from 'mongoose'
 
 export interface MenuItem {
 	name: string
@@ -11,7 +11,7 @@ export interface MenuItem {
 export interface MenuDocument extends Document {
 	items: MenuItem[]
 	status: 'pending' | 'approved'
-	creator: object
+	creator: Schema.Types.ObjectId
 }
 
 const menuSchema = new mongoose.Schema<MenuDocument>({
@@ -24,8 +24,8 @@ const menuSchema = new mongoose.Schema<MenuDocument>({
 			category: { type: String, required: true }
 		}
 	],
-	creator: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
-	status: { type: String, default: 'pending' } // Establecer "pending" como valor por defecto
+	creator: { type: Schema.Types.ObjectId, ref: 'Company' },
+	status: { type: String, default: 'pending' }
 })
 
 export default mongoose.model<MenuDocument>('Menu', menuSchema)

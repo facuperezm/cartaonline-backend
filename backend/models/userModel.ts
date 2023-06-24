@@ -1,15 +1,14 @@
-import mongoose from 'mongoose'
-import bycrypt from 'bcryptjs'
+import mongoose, { Document, Schema } from 'mongoose'
+import bcrypt from 'bcryptjs'
 
 export interface UserDocument extends Document {
 	_id: string
 	email: string
 	password: string
 	name: string
-	company: object
+	company: Schema.Types.ObjectId
 	isAdmin: boolean
 	matchPassword: (enteredPassword: string) => Promise<boolean>
-	isModified: (password: string) => boolean
 }
 
 const userSchema = new mongoose.Schema<UserDocument>(
@@ -20,7 +19,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
 		},
 		email: {
 			type: String,
-			unique: true, // no two users can have the same email
+			unique: true,
 			required: true
 		},
 		password: {
@@ -28,11 +27,11 @@ const userSchema = new mongoose.Schema<UserDocument>(
 			required: true
 		},
 		company: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'CompanyModel'
+			type: Schema.Types.ObjectId,
+			ref: 'Company'
 		},
 		isAdmin: {
-			type: Boolean, // only admins can create products
+			type: Boolean,
 			required: true,
 			default: false
 		}
@@ -49,15 +48,16 @@ userSchema.pre<UserDocument>('save', async function (next) {
 		next()
 	}
 
-	const salt = await bycrypt.genSalt(10)
-	user.password = await bycrypt.hash(user.password, salt)
+	const salt = await bcrypt.genSalt(10)
+	user.password = await bcrypt.hash(user.password, salt)
 })
 
 userSchema.methods.matchPassword = async function (
 	enteredPassword: string
 ): Promise<boolean> {
-	return await bycrypt.compare(enteredPassword, this.password)
+	return await bcrypt.compare(enteredPassword, this.password)
 }
+
 const User = mongoose.model<UserDocument>('User', userSchema)
 
 export default User

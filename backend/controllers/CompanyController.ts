@@ -54,13 +54,14 @@ export const saveCompany = asyncHandler(
 				res.status(201).json({
 					_id: newCompany._id,
 					companyName: newCompany.companyName,
-					name: newCompany.name
+					name: newCompany.name,
+					message: 'Company created successfully'
 				})
 			} else {
 				res.status(400)
 				throw new Error('Invalid company data')
 			}
-			res.status(201).json({ message: 'Company saved successfully' })
+			res.status(201).json()
 		} catch (error: any) {
 			res.status(500).json({ ok: false, message: error.message })
 			next(error)
@@ -102,10 +103,11 @@ export const loginCompany = asyncHandler(
 			}
 
 			// Generate JWT token
-			const token = jwt.sign(
-				{ companyId: company._id },
-				process.env.JWT_SECRET!
-			)
+			// const token = jwt.sign(
+			// 	{ companyId: company._id },
+			// 	process.env.JWT_SECRET!
+			// )
+			let token = generateToken(res, company._id.toString())
 
 			// Set the token in a cookie
 			res.cookie('token', token, { httpOnly: true })
@@ -123,7 +125,7 @@ export const loginCompany = asyncHandler(
 // @access  Private
 export const logoutCompany = asyncHandler(
 	async (req: Request, res: Response) => {
-		res.cookie('jwt', '', {
+		res.cookie('token', '', {
 			httpOnly: true,
 			expires: new Date(0),
 			secure: process.env.NODE_ENV === 'production'
@@ -154,36 +156,8 @@ export const getCompanyProfile = asyncHandler(
 
 			res.status(200).json(companyProfile)
 		} else {
-			res.status(404)
+			res.status(404).json({ ok: false, message: 'Company not found' })
 			throw new Error('Company not found')
-		}
-	}
-)
-
-// @desc  Get confirmation code/token
-// @route GET /api/dashboard/confirmation/:token
-// @access Private
-
-export const confirmCompany = asyncHandler(
-	async (req: Request, res: Response) => {
-		const { token } = req.params
-
-		try {
-			const user = await companyModel.findOne({ activationToken: token })
-
-			if (!user) {
-				return res.status(400).json({ message: 'Invalid token' })
-			}
-
-			// Activate user
-			user.active = true
-			user.activationToken = undefined
-
-			await user.save()
-
-			res.redirect('/dashboard')
-		} catch {
-			res.status(500).json({ ok: false, message: 'Something went wrong' })
 		}
 	}
 )
