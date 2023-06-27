@@ -7,23 +7,35 @@ interface AuthenticatedRequest extends Request {
 	user?: UserDocument
 }
 
-// @desc    Auth user & get token
-// @route   POST /api/users/auth
+// @desc    login user
+// @route   POST /api/users/login
 // @access  Public
-const authUser = asyncHandler(async (req: Request, res: Response) => {
+const authUser = asyncHandler(async (req, res) => {
 	const { email, password } = req.body
 
 	const user = await User.findOne({ email })
 
+	if (!user) {
+		res.status(401).json({ message: 'Invalid credentials' })
+		throw new Error('Invalid email or password')
+	}
+
 	if (user && (await user.matchPassword(password))) {
-		generateToken(res, user._id.toString())
-		res.status(201).json({
+		generateToken(res, user._id)
+
+		const tokenPayload = {
 			_id: user._id,
 			name: user.name,
 			email: user.email
+		}
+
+		res.status(200).json({
+			ok: true,
+			data: tokenPayload,
+			message: 'User logged in successfully'
 		})
 	} else {
-		res.status(400)
+		res.status(401)
 		throw new Error('Invalid email or password')
 	}
 })

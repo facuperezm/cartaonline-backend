@@ -18,9 +18,7 @@ const protect = asyncHandler(
 					userId: string
 				}
 
-				const user = await User.findById(decoded.userId)
-					.select('-password')
-					.exec()
+				const user = await User.findById(decoded.userId).select('-password')
 
 				if (user) {
 					req.user = user
