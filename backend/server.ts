@@ -18,13 +18,7 @@ const port = process.env.PORT || 5000
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
-app.use(cors())
-
-// {
-//   origin: 'http://yourfrontendapp.com', // Replace with your frontend app URL
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-// }
+app.use(cors({ origin: true, credentials: true }))
 
 // Routes
 app.use('/api/dashboard', companyRoutes)
