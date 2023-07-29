@@ -1,7 +1,6 @@
 import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import companyModel, { CompanyDocument } from '../models/companyModel'
-import jwt from 'jsonwebtoken'
 import generateToken from '../utils/generateToken'
 
 interface AuthenticatedRequest extends Request {
@@ -10,9 +9,9 @@ interface AuthenticatedRequest extends Request {
 
 // Esto deberia tener los siguientes controladores
 // 1. Crear una empresa (registrarse)
-// 2. Login de una empresa (con email y password)
-// 3. Logout de una empresa (destruir la cookie, ruta privada)
-// 4. Obtener todas las empresas (ruta publica, para el home)
+// 2. Obtener todas las empresas (ruta publica, para el home)
+// 3. Obtener el perfil de una empresa (ruta privada)
+// 4. Actualizar el perfil de una empresa (ruta privada)
 
 // @desc    Save a new company or REGISTER
 // @route   POST /api/dashboard
@@ -20,18 +19,9 @@ interface AuthenticatedRequest extends Request {
 export const saveCompany = asyncHandler(
 	async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const {
-				companyName,
-				name,
-				lastName,
-				email,
-				password,
-				category,
-				phoneNumber,
-				location
-			} = req.body
+			const { companyName, category, phoneNumber, location } = req.body
 
-			const companyExist = await companyModel.findOne({ email }) // Check if the company already exists
+			const companyExist = await companyModel.findOne({ companyName }) // Check if the company already exists
 
 			if (companyExist) {
 				res.status(400)
@@ -40,10 +30,6 @@ export const saveCompany = asyncHandler(
 
 			const newCompany = await companyModel.create({
 				companyName,
-				name,
-				lastName,
-				email,
-				password,
 				category,
 				phoneNumber,
 				location
@@ -54,7 +40,6 @@ export const saveCompany = asyncHandler(
 				res.status(201).json({
 					_id: newCompany._id,
 					companyName: newCompany.companyName,
-					name: newCompany.name,
 					message: 'Company created successfully'
 				})
 			} else {
@@ -86,55 +71,6 @@ export const getCompanies = asyncHandler(
 	}
 )
 
-// @desc    Login a company
-// @route   POST /api/company/login
-// @access  Public
-export const loginCompany = asyncHandler(
-	async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-		try {
-			const { email, password } = req.body
-
-			// Verify user credentials
-			const company = await companyModel.findOne({ email, password })
-
-			if (!company) {
-				res.status(401).json({ message: 'Invalid credentials' })
-				return
-			}
-
-			// Generate JWT token
-			// const token = jwt.sign(
-			// 	{ companyId: company._id },
-			// 	process.env.JWT_SECRET!
-			// )
-			let token = generateToken(res, company._id.toString())
-
-			// Set the token in a cookie
-			res.cookie('token', token, { httpOnly: true })
-
-			res.json({ message: 'Login successful' })
-		} catch (error: any) {
-			res.status(500).json({ ok: false, message: error.message })
-			next(error)
-		}
-	}
-)
-
-// @desc    Logout company
-// @route   GET /api/dashboard/logout
-// @access  Private
-export const logoutCompany = asyncHandler(
-	async (req: Request, res: Response) => {
-		res.cookie('token', '', {
-			httpOnly: true,
-			expires: new Date(0),
-			secure: process.env.NODE_ENV === 'production'
-		})
-
-		res.status(200).json({ message: 'Company logged out!' })
-	}
-)
-
 // @desc    Get company profile
 // @route   GET /api/dashboard/profile
 // @access  Private
@@ -146,9 +82,6 @@ export const getCompanyProfile = asyncHandler(
 			const companyProfile = {
 				_id: company._id,
 				companyName: company.companyName,
-				name: company.name,
-				lastName: company.lastName,
-				email: company.email,
 				category: company.category,
 				phoneNumber: company.phoneNumber,
 				location: company.location
@@ -158,6 +91,43 @@ export const getCompanyProfile = asyncHandler(
 		} else {
 			res.status(404).json({ ok: false, message: 'Company not found' })
 			throw new Error('Company not found')
+		}
+	}
+)
+
+// @desc    Update company profile
+// @route   PUT /api/dashboard/profile
+// @access  Private
+export const updateCompanyProfile = asyncHandler(
+	async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+		try {
+			const id = req.params.id
+			const company = req.company
+
+			if (company && company._id.toString() === id) {
+				company.companyName = req.body.companyName || company.companyName
+				company.category = req.body.category || company.category
+				company.phoneNumber = req.body.phoneNumber || company.phoneNumber
+				company.location = req.body.location || company.location
+
+				const updatedCompany = await company.save()
+
+				const companyProfile = {
+					_id: updatedCompany._id,
+					companyName: updatedCompany.companyName,
+					category: updatedCompany.category,
+					phoneNumber: updatedCompany.phoneNumber,
+					location: updatedCompany.location
+				}
+
+				res.status(200).json(companyProfile)
+			} else {
+				res.status(404).json({ ok: false, message: 'Company not found' })
+				throw new Error('Company not found')
+			}
+		} catch (error: any) {
+			res.status(500).json({ ok: false, message: error.message })
+			next(error)
 		}
 	}
 )

@@ -9,10 +9,6 @@ export interface WorkingHours {
 
 export interface CompanyDocument extends Document {
 	companyName: string
-	name: string
-	lastName: string
-	email: string
-	password: string
 	phoneNumber: number
 	category: string
 	location: string
@@ -31,9 +27,6 @@ const workingHoursSchema = new Schema<WorkingHours>({
 
 const companySchema = new Schema<CompanyDocument>({
 	companyName: { type: String, required: true, unique: true },
-	name: { type: String, required: true },
-	lastName: { type: String, required: true },
-	email: { type: String, unique: true, required: true },
 	category: { type: String, required: true },
 	daysOfOperation: [{ type: String }],
 	workingHours: [workingHoursSchema],
